@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experimental-Chatbot</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #343541;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #d1d5db;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 800px;
+            height: 90%;
+            background-color: #444654;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #202123;
+            color: #ffffff;
+            padding: 16px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #343541;
+        }
+        .message {
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 70%;
+            word-wrap: break-word;
+            font-size: 1em;
+        }
+        .user-message {
+            background-color: #10a37f;
+            color: #ffffff;
+            align-self: flex-end;
+        }
+        .bot-message {
+            background-color: #40414f;
+            color: #e8e8ea;
+            align-self: flex-start;
+        }
+        .chat-input-container {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: #202123;
+            border-top: 1px solid #3f4046;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #3f4046;
+            color: #d1d5db;
+            font-size: 1em;
+            outline: none;
+        }
+        .chat-input::placeholder {
+            color: #6b7280;
+        }
+        .send-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #10a37f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            outline: none;
+            transition: background-color 0.3s ease;
+        }
+        .send-button:hover {
+            background-color: #0e805e;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Pandey-Chatbot
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- Messages will be dynamically added here -->
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Type your message here..." />
+            <button class="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById("chat-messages");
+        const chatInput = document.getElementById("chat-input");
+
+        function addMessage(content, type) {
+            const message = document.createElement("div");
+            message.classList.add("message", type === "user" ? "user-message" : "bot-message");
+            message.textContent = content;
+            chatMessages.appendChild(message);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
+        }
+
+        async function sendMessage() {
+            const userInput = chatInput.value.trim();
+            if (!userInput) return;
+
+            // Add user message to chat
+            addMessage(userInput, "user");
+            chatInput.value = "";
+
+            // Add bot "Thinking..." placeholder
+            addMessage("Thinking...", "bot");
+            const botTyping = chatMessages.lastChild;
+
+            try {
+                // Send user input to backend
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: userInput }),
+                });
+
+                const data = await response.json();
+
+                // Remove "Thinking..." message
+                botTyping.remove();
+
+                // Add bot response
+                if (data.response) {
+                    addMessage(data.response, "bot");
+                } else {
+                    addMessage("Error: Unable to fetch response.", "bot");
+                }
+            } catch (error) {
+                botTyping.remove();
+                addMessage("Error: " + error.message, "bot");
+            }
+        }
+
+        // Send message on pressing Enter
+        chatInput.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
