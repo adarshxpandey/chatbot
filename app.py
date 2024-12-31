@@ -4,6 +4,8 @@ import google.generativeai as genai
 
 # Initialize Flask app
 app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
+app.logger.info(f"Templates folder: {os.path.abspath('templates')}")
 
 # Configure Google Gemini API with your API key
 genai.configure(api_key="AIzaSyAE-fHL5yh8whzCLk3qbaMc4kjH3Zi-jfE")
